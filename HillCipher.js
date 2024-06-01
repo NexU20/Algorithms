@@ -55,19 +55,14 @@ function matrixWithVectorMultiplication(matrix, vector) {
     return res;
 }
 
-function hillCypherEncrypt(word, key) {     //! Key must be 3x3 matrix
-    if (word.length === 0) return "No Word";
-    if (!determinant3x3Matrices(key)) return "Key tidak memiliki determinan"
+function hillCypher(word, key) {
 
-    word = word.toLowerCase();
-    word = word.padEnd(Math.ceil(word.length / 3) * 3, 'x');
-    
     // change each of the 3 letters to a vector
     const chunks = [];
     for (let i = 0; i < word.length; i += 3) {
         chunks.push(word.slice(i, i + 3).split('').map(letter => lettersBase[letter]));
     }
-    
+
     // transform each vector and then mod each letter by 26
     // and change them back to the letter 😉 
     const result = chunks.map(chunk => 
@@ -75,8 +70,18 @@ function hillCypherEncrypt(word, key) {     //! Key must be 3x3 matrix
         .map(value => Object.keys(lettersBase)[mod(value, 26)])
         .join('')
     );
-    
-    return result.join('');
+
+    return result.join('')
+}
+
+function encrypt(word, key) {     //! Key must be 3x3 matrix
+    if (word.length === 0) return "No Word";
+    if (!determinant3x3Matrices(key)) return "Key tidak memiliki determinan"
+
+    word = word.toLowerCase();
+    word = word.padEnd(Math.ceil(word.length / 3) * 3, 'x');
+
+    return hillCypher(word, key);
 }
 
 function encryptSentance(str, key) {
@@ -86,10 +91,32 @@ function encryptSentance(str, key) {
     let words = str.split(" ")
 
     let encryptedSentance = words.map(word => {
-        return hillCypherEncrypt(word, key)
+        return encrypt(word, key)
     })
 
     return encryptedSentance.join(" ")
+}
+
+function decrypt(word, key){  //! key is the matrix used in the encryption (before inverse)
+    if (word.length === 0) return "No Word";
+    if (!determinant3x3Matrices(key)) return "Key tidak memiliki determinan";
+
+    let inversedKey = inverse(key); 
+    
+    return hillCypher(word, inversedKey)
+}
+
+function decryptSentance(str, key) {    //! key is the matrix used in the encryption (before inverse)
+    if (str.length < 1) return "Empty"
+    if (!determinant3x3Matrices(key)) return "Key tidak memiliki determinan"
+
+    let words = str.split(" ")
+
+    let result = words.map(word => {
+        return decrypt(word, key)
+    })
+
+    return result.join(" ")
 }
 
 function determinant3x3Matrices(matrix){
@@ -143,28 +170,6 @@ function inverse(matrix) {
     return inverse;
 }
 
-
-function hillCypherDecrypt(word, key){  //! key is the matrix used in the encryption (before inverse)
-    if (word.length === 0) return "No Word";
-    if (!determinant3x3Matrices(key)) return "Key tidak memiliki determinan";
-
-    const chunks = [];
-    for (let i = 0; i < word.length; i += 3) {
-        chunks.push(word.slice(i, i + 3).split('').map(letter => lettersBase[letter]));
-    }
-    
-    // transform each vector and then mod each letter by 26
-    // and change them back to the letter 😉
-    let inversedKey = inverse(key); 
-    const result = chunks.map(chunk => 
-        matrixWithVectorMultiplication(inversedKey, chunk)
-        .map(value => Object.keys(lettersBase)[mod(value, 26)])
-        .join('')
-    );
-    
-    return result.join('');
-}
-
 const mod = function (num, n) {
     "use strict";
     return ((num % n) + n) % n;
@@ -192,50 +197,8 @@ const B = [
 // console.log(inverse(matrix));
 // console.log(determinant3x3Matrices(B))
 // console.log("Lindan")
-// console.log(hillCypherEncrypt("lindan", matrix))
-// console.log(hillCypherDecrypt('oizqap', matrix))
+// console.log(encrypt("lindan", matrix))
+// console.log(decrypt('oizqap', matrix))
 // console.log(mod(-67, 26))
-// console.log(hillCypherEncrypt("secretlindankerenbanget", A))
+// console.log(encrypt("secretlindankerenbanget", A))
 // console.log(encryptSentance("Hallo namaku lindan", A))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// const B = [
-//     [1, 3, 2],
-//     [1, 2, 1]
-// ]
-
-// const vect1 = [2, 4, 5]
-
-// const vect2 = [3, 1, 1]
-
-// console.log(matrixWithVectorMultiplication(A, vect1))
-// console.log(matrixMultiplication(B, vect2))
