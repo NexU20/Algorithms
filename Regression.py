@@ -1,15 +1,20 @@
-import numpy as np
+# import numpy as np
 
 class Regression:
     intercept = 0
     coef = 1
 
     def __init__(self, xParam, yParam) -> None:
+        isValid = data_check(xParam, yParam)
+        
+        if not isValid:
+            raise Exception("Data length must be the same!")
+        
         self.x_datas = xParam
         self.y_datas = yParam
 
         self.gradient_descent()
-        self.r_squared()
+        self.__calculateR()
     
     def normalLinearFunction(self, x, intercept = 0, coef = 1):
         return coef * x + intercept
@@ -27,7 +32,7 @@ class Regression:
     
     def SSA(self, actualDatas):
         ssa = 0
-        avg = np.average(actualDatas)
+        avg = average(actualDatas)
         for i in range(len(actualDatas)):
             ssa += (avg - actualDatas[i])**2
         
@@ -37,35 +42,39 @@ class Regression:
         IS_INTERCEPT_TRAINING_DONE = False
         IS_COEF_TRAINING_DONE = False
 
+        DATA_LENGTH = len(self.x_datas)
         isContinue = True
         while isContinue:
-            y_predict = []
-            for x in self.x_datas:
-                y_predict.append(self.normalLinearFunction(x, intercept = self.intercept, coef = self.coef))
-
-            sum_of_slope = 0
+            
+            intercept_gradient = 0
             if(not IS_INTERCEPT_TRAINING_DONE):
                 all_interceptSlopes = []
-                for i in range(len(self.y_datas)):
-                    all_interceptSlopes.append(-2*(self.y_datas[i] - y_predict[i]))
+                for i in range(DATA_LENGTH):
+                    x = self.x_datas[i]
+                    actual = self.y_datas[i]
+                    predict = self.normalLinearFunction(x, intercept = self.intercept, coef = self.coef)
+                    all_interceptSlopes.append(-2 * (actual - predict) )
                 
-                sum_of_slope = np.sum(all_interceptSlopes)
+                intercept_gradient = (1 / (2 * DATA_LENGTH)) * (sum(all_interceptSlopes))
                 
-                intercept_step_size = sum_of_slope * 0.01
+                intercept_step_size = intercept_gradient * 0.1
                 self.intercept -= intercept_step_size
             
                 if abs(intercept_step_size) < 0.01:
                     IS_INTERCEPT_TRAINING_DONE = True
 
-            sum_of_coefSlope = 0
+            coef_gradient = 0
             if(not IS_COEF_TRAINING_DONE):
                 slopes = []
-                for x in range(len(self.x_datas)):
-                    slopes.append(-2 * self.x_datas[x] * (self.y_datas[x] - y_predict[x]))
+                for i in range(DATA_LENGTH):
+                    x = self.x_datas[i]
+                    actual = self.y_datas[i]
+                    predict = self.normalLinearFunction(x, intercept = self.intercept, coef = self.coef)
+                    slopes.append(-2 * x * (actual - predict))
                 
-                sum_of_coefSlope = np.sum(slopes)
+                coef_gradient = (1 / (2 * DATA_LENGTH)) * (sum(slopes))
                 
-                coef_step_size = sum_of_coefSlope * 0.0001
+                coef_step_size = coef_gradient * 0.01
                 self.coef -= coef_step_size
             
                 if abs(coef_step_size) < 0.01:
@@ -73,10 +82,28 @@ class Regression:
             
             isContinue = not (IS_INTERCEPT_TRAINING_DONE and IS_COEF_TRAINING_DONE)
     
-    def r_squared(self):
+    def __calculateR(self):
         predict = []
 
         for x in self.x_datas:
             predict.append(self.normalLinearFunction(x, self.intercept, self.coef))
         
         self.R_SQUARED = 1 - (self.SSR(self.y_datas, predict) / self.SSA(self.y_datas))
+
+def data_check(xDatas, yDatas) -> bool:
+    lenX = len(xDatas)
+    lenY = len(yDatas)
+    
+    return lenX == lenY
+
+def sum(array):
+    sum = 0
+    for i in range(len(array)):
+        sum += array[i]
+    
+    return sum
+
+def average(array):
+    result = sum(array) / len(array)
+    
+    return result
