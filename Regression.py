@@ -1,4 +1,5 @@
 # import numpy as np
+# ! Modelnya masih lambat, buat aku di masa depan kalau bisa tolong perbaiki agar lebih cepat (sama apa kabar, semangat terus yah)
 
 class Regression:
     intercept = 0
